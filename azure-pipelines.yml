@@ -76,3 +76,16 @@ steps:
   workingDirectory: "$(modulePath)"
 
 # End Puppet
+
+# Chef
+
+- script: |
+    export GO111MODULE=on
+    expect test_chef.exp
+  displayName: 'Generate a chef payload'
+  workingDirectory: "$(modulePath)"
+
+# End Chef
+
+# Run Unit Tests
+- script: "go test -count=1 -v -race ./..."
