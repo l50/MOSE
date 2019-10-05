@@ -1,12 +1,12 @@
 trigger:
-- master
+- develop
 
 schedules:
 - cron: "0 0 * * 0"
   displayName: Weekly midnight (UTC) build
   branches:
     include:
-    - master
+    - develop
   always: true
 
 pool:
