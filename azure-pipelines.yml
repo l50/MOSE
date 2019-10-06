@@ -37,7 +37,7 @@ steps:
   displayName: 'Set up the Go workspace'
 
 - script: |
-    cd $(modulePath)
+    #cd $(modulePath)
     go get -u github.com/gobuffalo/packr/v2/packr2
     export GO111MODULE=on
     go get
@@ -87,8 +87,8 @@ steps:
 # End Chef
 
 - script: |
-   cd $(modulePath)
-   #export GO111MODULE=on
+   #cd $(modulePath)
+   export GO111MODULE=on
    go test -count=1 -v -race ./...
   displayName: 'Run unit tests'
   workingDirectory: "$(modulePath)"
