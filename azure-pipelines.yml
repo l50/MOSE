@@ -1,12 +1,12 @@
 trigger:
-- develop
+- azure-pipelines
 
 schedules:
 - cron: "0 0 * * 0"
   displayName: Weekly midnight (UTC) build
   branches:
     include:
-    - develop
+    - azure-pipelines
   always: true
 
 pool:
@@ -80,6 +80,10 @@ steps:
 # Chef
 
 - script: |
+    ls -lart
+    sudo apt-get update -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
+    sudo apt-get install -y expect
     export GO111MODULE=on
     expect test_chef.exp
   displayName: 'Generate a chef payload'
