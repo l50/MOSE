@@ -1,12 +1,12 @@
 trigger:
-- develop
+- master
 
 schedules:
 - cron: "0 0 * * 0"
   displayName: Weekly midnight (UTC) build
   branches:
     include:
-    - develop
+    - master
   always: true
 
 pool:
@@ -80,9 +80,9 @@ steps:
 # Chef
 
 - script: |
-    apt-get update -y
-    DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
-    apt-get install -y expect
+    sudo apt-get update -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
+    sudo apt-get install -y expect
     export GO111MODULE=on
     expect test_chef.exp
   displayName: 'Generate a chef payload'
