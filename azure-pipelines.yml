@@ -80,10 +80,13 @@ steps:
 # Chef
 
 - script: |
+    # DEBUG
+    ls -lart
     sudo apt-get update -y
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
     sudo apt-get install -y expect
     export GO111MODULE=on
+    # This isn't showing up for some reason:
     expect test_chef.exp
   displayName: 'Generate a chef payload'
   workingDirectory: "$(modulePath)"
