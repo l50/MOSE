@@ -1,12 +1,12 @@
 trigger:
-- azure-pipelines
+- master
 
 schedules:
 - cron: "0 0 * * 0"
   displayName: Weekly midnight (UTC) build
   branches:
     include:
-    - azure-pipelines
+    - master
   always: true
 
 pool:
@@ -86,6 +86,9 @@ steps:
   workingDirectory: "$(modulePath)"
 # End Chef
 
-#- script: "go test -count=1 -v -race ./..."
-#  displayName: 'Run unit tests'
-#  workingDirectory: "$(modulePath)"
+- script: |
+   cd $(modulePath)
+   export GO111MODULE=on
+   go test -count=1 -v -race ./...
+  displayName: 'Run unit tests'
+  workingDirectory: "$(modulePath)"
