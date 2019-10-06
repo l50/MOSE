@@ -1,12 +1,12 @@
 trigger:
-- master
+- develop
 
 schedules:
 - cron: "0 0 * * 0"
   displayName: Weekly midnight (UTC) build
   branches:
     include:
-    - master
+    - develop
   always: true
 
 pool:
@@ -76,3 +76,19 @@ steps:
   workingDirectory: "$(modulePath)"
 
 # End Puppet
+
+# Chef
+
+- script: |
+    sudo apt-get update -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
+    sudo apt-get install -y expect
+    export GO111MODULE=on
+    expect test_chef.exp
+  displayName: 'Generate a chef payload'
+  workingDirectory: "$(modulePath)"
+
+# End Chef
+
+# Run Unit Tests
+- script: "go test -count=1 -v -race ./..."
