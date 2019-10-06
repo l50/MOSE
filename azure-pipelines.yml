@@ -86,6 +86,6 @@ steps:
   workingDirectory: "$(modulePath)"
 # End Chef
 
-- script: "go test -count=1 -v -race ./..."
-  displayName: 'Run unit tests'
-  workingDirectory: "$(modulePath)"
+#- script: "go test -count=1 -v -race ./..."
+#  displayName: 'Run unit tests'
+#  workingDirectory: "$(modulePath)"
