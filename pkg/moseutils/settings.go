@@ -20,6 +20,7 @@ type Settings struct {
 	ImageName           string
 	PuppetBackupLoc     string
 	RemoteHost          string
+	SaltBackupLoc       string
 	SSLCertPath         string
 	SSLKeyPath          string
 	TargetChefServer    string

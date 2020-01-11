@@ -7,6 +7,7 @@
 	"imageName" : "mose/chef-workstation",
 	"puppetBackupLoc" : "",
 	"remoteHost" : "",
+	"saltBackupLoc": "",
 	"sslCertPath": "data/mose.crt",
 	"sslKeyPath" : "data/mose.key",
 	"targetChefServer" : "chef-server",

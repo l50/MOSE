@@ -42,6 +42,7 @@ type UserInput struct {
 	ImageName           string
 	PuppetBackupLoc     string
 	RemoteHost          string
+	SaltBackupLoc       string
 	SSLCertPath         string
 	SSLKeyPath          string
 	TargetChefServer    string
@@ -119,6 +120,7 @@ func GetUserInput() UserInput {
 		PuppetBackupLoc:      JSONSettings.PuppetBackupLoc,
 		RemoteUploadFilePath: Cli.RemoteUploadFilePath,
 		Rhost:                Cli.Rhost,
+		SaltBackupLoc:        JSONSettings.SaltBackupLoc,
 		SettingsPath:         Cli.SettingsPath,
 		ServeSSL:             Cli.ServeSSL,
 		SSLCertPath:          JSONSettings.SSLCertPath,

