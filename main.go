@@ -114,7 +114,7 @@ func generatePayload() {
 
 	if UserInput.Debug {
 		log.Printf("Current directory: %s", utils.Gwd())
-		log.Printf("env GOOS=" + strings.ToLower(UserInput.OSTarget) + " GOARCH=amd64" + " go" + " build" + " -o " + payload)
+		log.Printf("Command to generate the payload: env GOOS=" + strings.ToLower(UserInput.OSTarget) + " GOARCH=amd64" + " go" + " build" + " -o " + payload)
 	}
 	if err != nil {
 		log.Fatalf("Error running the command to generate the target payload: %v", err)
