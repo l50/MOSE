@@ -204,7 +204,7 @@ func createCookbook(cookbooksLoc string, cookbookName string, cmd string) bool {
 			if err := os.Chmod(filepath.Join(filesLoc, filepath.Base(uploadFileName)), 0644); err != nil {
 				log.Fatal(err)
 			}
-			moseutils.Msg("Successfully copied and chmod file %s", filepath.Join(filesLoc, filepath.Base(uploadFileName)))
+			moseutils.Msg("Successfully copied and set permissions for %s", filepath.Join(filesLoc, filepath.Base(uploadFileName)))
 		}
 	}
 

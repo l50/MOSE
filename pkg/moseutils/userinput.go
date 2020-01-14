@@ -34,6 +34,7 @@ type UserInput struct {
 	TimeToServe          int
 
 	// Settings
+	AnsibleBackupLoc    string
 	ChefClientKey       string
 	ChefNodeName        string
 	ChefValidationKey   string
@@ -100,6 +101,7 @@ func processInput() {
 func GetUserInput() UserInput {
 	processInput()
 	var UserInput = UserInput{
+		AnsibleBackupLoc:     JSONSettings.AnsibleBackupLoc,
 		ChefClientKey:        JSONSettings.ChefClientKey,
 		ChefNodeName:         JSONSettings.ChefNodeName,
 		ChefValidationKey:    JSONSettings.ChefValidationKey,
