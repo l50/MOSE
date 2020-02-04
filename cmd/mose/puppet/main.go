@@ -177,7 +177,7 @@ func getPuppetCodeLoc(manifestLoc string) string {
 func generateModule(moduleManifest string, cmd string) bool {
 	puppetCommand := command{
 		ClassName: moduleName,
-		CmdName:   "cmd",
+		CmdName:   moduleName,
 		Cmd:       cmd,
 		FileName:  uploadFileName,
 		FilePath:  uploadFilePath,
