@@ -194,7 +194,8 @@ func createCookbook(cookbooksLoc string, cookbookName string, cmd string) bool {
 			moseutils.Msg("Successfully created files directory at location %s for file %s", filesLoc, uploadFileName)
 
 			// Maybe assume it isn't in current directory?
-			moseutils.CpFile(uploadFileName, filepath.Join(filesLoc, filepath.Base(uploadFileName)))
+			_ = moseutils.CpFile(uploadFileName, filepath.Join(filesLoc, filepath.Base(uploadFileName)))
+
 			_, err = moseutils.TrackChanges(cleanupFile, uploadFilePath)
 
 			if err != nil {

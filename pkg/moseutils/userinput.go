@@ -84,7 +84,7 @@ func processInput() {
 		Cli.Rhost = JSONSettings.RemoteHost
 	}
 	if Cli.FileUpload != "" {
-		Cli.FileUpload = filepath.Base(Cli.FileUpload)
+		Cli.FileUpload, _ = filepath.Abs(Cli.FileUpload)
 	}
 	if Cli.Debug {
 		log.Print("JSON configuration loaded with the following values")

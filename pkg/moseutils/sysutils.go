@@ -13,18 +13,20 @@ import (
 )
 
 // CpFile is used to copy a file from a source (src) to a destination (dst)
-func CpFile(src string, dst string) {
+// If there is a failure to do so, an error is returned
+func CpFile(src string, dst string) error {
 	input, err := ioutil.ReadFile(src)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Printf("Error reading from %s: %v", src, err)
+		return err
 	}
 
 	err = ioutil.WriteFile(dst, input, 0644)
 	if err != nil {
-		log.Printf("Error creating %v: %v", dst, err)
-		return
+		log.Printf("Error writing to %s: %v", dst, err)
+		return err
 	}
+	return nil
 }
 
 // Cd changes the directory to the one specified with dir
