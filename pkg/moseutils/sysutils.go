@@ -5,6 +5,7 @@
 package moseutils
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +13,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
+	"time"
 )
 
 // CpFile is used to copy a file from a source (src) to a destination (dst)
@@ -35,6 +38,46 @@ func Cd(dir string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// Get the uid and gid of a file
+func GetUidGid(file string) (int, int, error) {
+	info, err := os.Stat(file)
+	if err != nil {
+		return -1, -1, err
+	}
+	if stat, ok := info.Sys().(*syscall.Stat_t); ok {
+		UID := int(stat.Uid)
+		GID := int(stat.Gid)
+		return UID, GID, nil
+	}
+	return -1, -1, errors.New("Unable to retreive UID and GID of file")
+}
+
+// Recursively change owner of directory
+func ChownR(path string, uid int, gid int) error {
+	return filepath.Walk(path, func(name string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		_ = os.Chown(name, uid, gid)
+		return nil
+	})
+}
+
+// Get time information for a file
+func GetFileAMCTime(file string) (time.Time, time.Time, time.Time, error) {
+	info, err := os.Stat(file)
+	if err != nil {
+		return time.Time{}, time.Time{}, time.Time{}, err
+	}
+	if stat, ok := info.Sys().(*syscall.Stat_t); ok {
+		atime := time.Unix(int64(stat.Atim.Nsec), int64(stat.Atim.Nsec))
+		mtime := time.Unix(int64(stat.Mtim.Nsec), int64(stat.Mtim.Nsec))
+		ctime := time.Unix(int64(stat.Ctim.Nsec), int64(stat.Ctim.Nsec))
+		return atime, mtime, ctime, nil
+	}
+	return time.Time{}, time.Time{}, time.Time{}, errors.New("Unable to retreive UID and GID of file")
 }
 
 // FindFiles finds files based on their extension in specified directories
