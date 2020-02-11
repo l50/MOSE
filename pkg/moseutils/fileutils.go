@@ -149,8 +149,8 @@ func LinesFromReader(r io.Reader) ([]string, error) {
 func ArchiveFiles(files []string, tarLocation string) error {
 	ext, err := archiver.ByExtension(filepath.Base(tarLocation))
 	if err != nil {
-		log.Println("No valid extension found, please provide extension for output file. (tar, zip)")
-		return err
+		ext = archiver.NewTar()
+		tarLocation = tarLocation + ".tar"
 	}
 	if _, err := os.Stat(tarLocation); os.IsNotExist(err) {
 		_ = os.Remove(tarLocation)
@@ -163,6 +163,7 @@ func ArchiveFiles(files []string, tarLocation string) error {
 	if err := arc.Archive(files, tarLocation); err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Archive file created at %s", tarLocation)
 	return nil
 }
 
