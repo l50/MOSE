@@ -14,10 +14,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/CrimsonK1ng/mose/pkg/moseutils"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
-	"github.com/l50/mose/pkg/moseutils"
 )
 
 type command struct {
@@ -519,11 +519,6 @@ func getVaultPassFromCfg() (bool, string) {
 }
 
 func main() {
-	// TODO: Fix this
-	if cleanup {
-		doCleanup(files.siteFile)
-	}
-
 	if uploadFileName != "" {
 		moseutils.CpFile(uploadFileName, uploadFilePath)
 		_, err := moseutils.TrackChanges(cleanupFile, uploadFileName)
@@ -537,6 +532,10 @@ func main() {
 	files.siteFile = getSiteFile()
 	if debug {
 		log.Printf("Site file: %v", files.siteFile)
+	}
+
+	if cleanup {
+		doCleanup(files.siteFile)
 	}
 
 	// Find ansible.cfg

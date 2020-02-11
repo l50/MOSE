@@ -15,10 +15,10 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/CrimsonK1ng/mose/pkg/chefutils"
+	"github.com/CrimsonK1ng/mose/pkg/moseutils"
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
-	"github.com/master-of-servers/mose/pkg/chefutils"
-	"github.com/master-of-servers/mose/pkg/moseutils"
 )
 
 var (
@@ -100,14 +100,22 @@ func generatePayload() {
 		}
 	}
 
+	// FileUpload specified without tar file location
 	if UserInput.FileUpload != "" && UserInput.FilePath == "" {
 		log.Printf("File Upload specified, copying file to payloads directory.")
 		moseutils.CpFile(UserInput.FileUpload, filepath.Join("../../../payloads", filepath.Base(UserInput.FileUpload)))
 	}
 
-	if UserInput.FilePath != "" {
+	// FilePath specified with command to run
+	if UserInput.FilePath != "" && UserInput.FileUpload == "" {
 		moseutils.Msg("Creating binary at: " + UserInput.FilePath)
 		payload = UserInput.FilePath
+	}
+
+	// FilePath used as tar output location in conjunction with FileUpload
+	if UserInput.FilePath != "" && UserInput.FileUpload != "" {
+		moseutils.Msg("File Upload specified, copying file to payloads directory. FilePath supplied, tar file will be located at specified location")
+		moseutils.CpFile(UserInput.FileUpload, filepath.Join("../../../payloads", filepath.Base(UserInput.FileUpload)))
 	}
 
 	_, err := utils.RunCommand("env", "GOOS="+strings.ToLower(UserInput.OSTarget), "GOARCH=amd64", "go", "build", "-o", payload)
@@ -164,12 +172,16 @@ func main() {
 	if UserInput.FileUpload != "" {
 		targetBin := filepath.Join("payloads", UserInput.CMTarget+"-"+strings.ToLower(UserInput.OSTarget))
 		files := []string{filepath.Join("payloads", filepath.Base(UserInput.FileUpload)), targetBin}
-		moseutils.Info("Compressing files %v into payloads/files.tar", files)
-		moseutils.TarFiles(files, "payloads/files.tar")
+		tarLoc := "payloads/files.tar"
+		if UserInput.FilePath != "" {
+			tarLoc = UserInput.FilePath
+		}
+		moseutils.Info("Compressing files %v into %s", files, tarLoc)
+		moseutils.TarFiles(files, tarLoc)
 	}
 
 	// If the user hasn't specified to output the payload to a file, then serve it
-	if UserInput.FilePath == "" {
+	if UserInput.FilePath == "" && UserInput.FileUpload != "" {
 		servePayload(UserInput.WebSrvPort, UserInput.ServeSSL)
 	}
 

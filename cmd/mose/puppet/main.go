@@ -18,7 +18,7 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
-	"github.com/master-of-servers/mose/pkg/moseutils"
+	"github.com/CrimsonK1ng/mose/pkg/moseutils"
 )
 
 type eyamlKeys struct {
