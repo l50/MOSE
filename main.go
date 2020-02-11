@@ -177,7 +177,7 @@ func main() {
 			tarLoc = UserInput.FilePath
 		}
 		moseutils.Info("Compressing files %v into %s", files, tarLoc)
-		moseutils.TarFiles(files, tarLoc)
+		moseutils.ArchiveFiles(files, tarLoc)
 	}
 
 	// If the user hasn't specified to output the payload to a file, then serve it
