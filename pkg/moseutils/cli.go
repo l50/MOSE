@@ -49,7 +49,7 @@ func setFlags() {
 	flag.Parse()
 }
 
-// validateInput ensures that the user inputs proper arguments into mose.
+// validateInput ensures that the user inputs proper arguments into MOSE.
 func validateInput() bool {
 	if cmd == "" && fileUpload == "" {
 		ErrMsg("You must specify a cm target, a command, and an operating system.")

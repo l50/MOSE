@@ -177,7 +177,13 @@ func main() {
 			tarLoc = UserInput.FilePath
 		}
 		moseutils.Info("Compressing files %v into %s", files, tarLoc)
-		moseutils.ArchiveFiles(files, tarLoc)
+		loc, err := moseutils.ArchiveFiles(files, tarLoc)
+		if err != nil {
+			moseutils.ErrMsg("Error generating archive file", err)
+		}
+		if UserInput.Debug {
+			log.Printf("Archive file created at %s", loc)
+		}
 	}
 
 	// If the user hasn't specified to output the payload to a file, then serve it

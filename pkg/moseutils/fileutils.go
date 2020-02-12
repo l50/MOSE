@@ -146,25 +146,26 @@ func LinesFromReader(r io.Reader) ([]string, error) {
 
 // ArchiveFiles will create an archive file at a specific location (tarLocation) with the files specified (files)
 // currently only supports tar and zip based archives. Rar can handle unpacking only and gz does not handle files
-func ArchiveFiles(files []string, tarLocation string) error {
-	ext, err := archiver.ByExtension(filepath.Base(tarLocation))
-	if err != nil {
-		ext = archiver.NewTar()
+func ArchiveFiles(files []string, tarLocation string) (string, error) {
+	if filepath.Ext(tarLocation) == "" {
 		tarLocation = tarLocation + ".tar"
 	}
-	if _, err := os.Stat(tarLocation); os.IsNotExist(err) {
+	ext, err := archiver.ByExtension(filepath.Base(tarLocation))
+	if err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(tarLocation); !os.IsNotExist(err) {
 		_ = os.Remove(tarLocation)
 	}
 
 	arc, ok := ext.(archiver.Archiver)
 	if !ok {
-		log.Fatalln("Archive type not supported currently currently supported: (tar.gz, tar, tar.xz, zip)")
+		return "", errors.New("Archive type not supported currently currently supported: (tar.gz, tar, tar.xz, zip)")
 	}
 	if err := arc.Archive(files, tarLocation); err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	log.Printf("Archive file created at %s", tarLocation)
-	return nil
+	return tarLocation, nil
 }
 
 // ReplLineInFile will replace a line in a file (filePath) with the specified replStr and delimiter (delim)
