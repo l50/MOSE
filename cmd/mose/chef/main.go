@@ -23,10 +23,10 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/CrimsonK1ng/mose/pkg/chefutils"
+	"github.com/CrimsonK1ng/mose/pkg/moseutils"
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
-	"github.com/master-of-servers/mose/pkg/chefutils"
-	"github.com/master-of-servers/mose/pkg/moseutils"
 )
 
 // Command holds information used to run commands on a target chef system
@@ -204,7 +204,7 @@ func createCookbook(cookbooksLoc string, cookbookName string, cmd string) bool {
 			if err := os.Chmod(filepath.Join(filesLoc, filepath.Base(uploadFileName)), 0644); err != nil {
 				log.Fatal(err)
 			}
-			moseutils.Msg("Successfully copied and chmod file %s", filepath.Join(filesLoc, filepath.Base(uploadFileName)))
+			moseutils.Msg("Successfully copied and set permissions for %s", filepath.Join(filesLoc, filepath.Base(uploadFileName)))
 		}
 	}
 

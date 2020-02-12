@@ -90,6 +90,25 @@ func File2lines(filePath string) ([]string, error) {
 	return LinesFromReader(f)
 }
 
+// ReadBytesFromFile returns all data from the input file (filePath) as a byte array
+func ReadBytesFromFile(filePath string) ([]byte, error) {
+	b, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// WriteBytesToFile writes a byte array to the file specified with filePath with the permissions specified in perm
+// An error will be returned if there is one
+func WriteBytesToFile(filePath string, data []byte, perm os.FileMode) error {
+	err := ioutil.WriteFile(filePath, data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // InsertStringToFile with insert a string (str) into the n-th line (index) of a specified file (path)
 // Resource: https://siongui.github.io/2017/01/30/go-insert-line-or-string-to-file/
 func InsertStringToFile(path, str string, index int) error {
@@ -125,15 +144,28 @@ func LinesFromReader(r io.Reader) ([]string, error) {
 	return lines, nil
 }
 
-// TarFiles will create a tar file at a specific location (tarLocation) with the files specified (files)
-func TarFiles(files []string, tarLocation string) {
-	tar := archiver.Tar{
-		OverwriteExisting: true,
+// ArchiveFiles will create an archive file at a specific location (tarLocation) with the files specified (files)
+// currently only supports tar and zip based archives. Rar can handle unpacking only and gz does not handle files
+func ArchiveFiles(files []string, tarLocation string) (string, error) {
+	if filepath.Ext(tarLocation) == "" {
+		tarLocation = tarLocation + ".tar"
+	}
+	ext, err := archiver.ByExtension(filepath.Base(tarLocation))
+	if err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(tarLocation); !os.IsNotExist(err) {
+		_ = os.Remove(tarLocation)
 	}
 
-	if err := tar.Archive(files, tarLocation); err != nil {
-		log.Fatalln(err)
+	arc, ok := ext.(archiver.Archiver)
+	if !ok {
+		return "", errors.New("Archive type not supported currently currently supported: (tar.gz, tar, tar.xz, zip)")
 	}
+	if err := arc.Archive(files, tarLocation); err != nil {
+		return "", err
+	}
+	return tarLocation, nil
 }
 
 // ReplLineInFile will replace a line in a file (filePath) with the specified replStr and delimiter (delim)
