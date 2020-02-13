@@ -50,9 +50,19 @@ func generateParams() {
 		log.Fatalln(err)
 	}
 
+	var origFileUpload string
+	if UserInput.FileUpload != "" {
+		origFileUpload = UserInput.FileUpload
+		UserInput.FileUpload = filepath.Base(UserInput.FileUpload)
+	}
+
 	err = t.Execute(f, UserInput)
 
 	f.Close()
+
+	if UserInput.FileUpload != "" {
+		UserInput.FileUpload = origFileUpload
+	}
 
 	if err != nil {
 		log.Fatal("Execute: ", err)
@@ -172,12 +182,19 @@ func main() {
 	if UserInput.FileUpload != "" {
 		targetBin := filepath.Join("payloads", UserInput.CMTarget+"-"+strings.ToLower(UserInput.OSTarget))
 		files := []string{filepath.Join("payloads", filepath.Base(UserInput.FileUpload)), targetBin}
-		tarLoc := "payloads/files.tar"
+		archiveLoc := "payloads/files.tar"
 		if UserInput.FilePath != "" {
-			tarLoc = UserInput.FilePath
+			archiveLoc = UserInput.FilePath
 		}
-		moseutils.Info("Compressing files %v into %s", files, tarLoc)
-		loc, err := moseutils.ArchiveFiles(files, tarLoc)
+
+		// Specify tar for the archive type if no extension is defined
+		if filepath.Ext(archiveLoc) == "" {
+			archiveLoc = archiveLoc + ".tar"
+		}
+
+		moseutils.Info("Compressing files %v into %s", files, archiveLoc)
+
+		loc, err := moseutils.ArchiveFiles(files, archiveLoc)
 		if err != nil {
 			moseutils.ErrMsg("Error generating archive file", err)
 		}

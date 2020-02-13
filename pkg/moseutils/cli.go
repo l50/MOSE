@@ -56,6 +56,13 @@ func validateInput() bool {
 		ErrMsg("Example: mose -t puppet -c pwd -o Linux")
 		return false
 	}
+
+	if cmd != "" && fileUpload != "" {
+		ErrMsg("You must specify either, a command to run or a file to upload")
+		ErrMsg("Example: mose -t puppet -c pwd -o Linux")
+		return false
+	}
+
 	return true
 }
 
