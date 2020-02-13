@@ -52,14 +52,14 @@ func setFlags() {
 // validateInput ensures that the user inputs proper arguments into MOSE.
 func validateInput() bool {
 	if cmd == "" && fileUpload == "" {
-		ErrMsg("You must specify a cm target, a command, and an operating system.")
-		ErrMsg("Example: mose -t puppet -c pwd -o Linux")
+		ErrMsg("You must specify a CM target and a command or file to upload.")
+		ErrMsg("Example: mose -t puppet -c pwd")
 		return false
 	}
 
 	if cmd != "" && fileUpload != "" {
-		ErrMsg("You must specify either, a command to run or a file to upload")
-		ErrMsg("Example: mose -t puppet -c pwd -o Linux")
+		ErrMsg("You must specify a CM target, a command or file to upload, and an operating system.")
+		ErrMsg("Example: mose -t chef -fu evil.sh")
 		return false
 	}
 
