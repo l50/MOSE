@@ -79,7 +79,7 @@ func doCleanup(siteLoc string) {
 	moseutils.TrackChanges(cleanupFile, cleanupFile)
 	ans, err := moseutils.AskUserQuestion("Would you like to remove all files associated with a previous run?", osTarget)
 	if err != nil {
-		log.Fatal("Failed to do the cleanup: %v, exiting...", err)
+		log.Fatalf("Failed to do the cleanup: %v, exiting...", err)
 	}
 	moseutils.RemoveTracker(cleanupFile, osTarget, ans)
 
@@ -568,7 +568,6 @@ func main() {
 	files.uid = uid
 	files.gid = gid
 
-	// TODO: Fix this
 	if cleanup {
 		doCleanup(files.siteFile)
 	}
@@ -594,14 +593,14 @@ func main() {
 	// Parse managed systems from the hosts files found previously
 	files.hosts = getManagedSystems()
 	if len(files.hosts) > 0 {
-		moseutils.Info("The following managed systems found: %v", files.hosts)
+		moseutils.Info("The following managed systems were found: %v", files.hosts)
 	}
 
 	if files.siteFile != "" {
 		if ans, err := moseutils.AskUserQuestion("Do you want to create a backup of the manifests? This can lead to attribution, but can save your bacon if you screw something up or if you want to be able to automatically clean up. ", a.OsTarget); ans && err == nil {
 			backupSiteFile()
 		} else if err != nil {
-			moseutils.ErrMsg("Error backing up %s: %v, exiting...", files.siteFile, err)
+			log.Fatal("Exiting...")
 		}
 	}
 
