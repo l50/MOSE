@@ -5,12 +5,15 @@
 package main
 
 import (
+	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -105,6 +108,41 @@ func doCleanup(siteLoc string) {
 		os.Remove(path)
 	}
 	os.Exit(0)
+}
+
+func indexedUserQuestion(question string, osTarget string, validIndices map[int]bool, pp func()) (map[int]bool, error) {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		var err error
+		fmt.Println(question + "(Provide answer as comma seperated)")
+		text, _ := reader.ReadString('\n')
+		if strings.Contains(text, "q") {
+			return nil, errors.New("Quit")
+		}
+		if osTarget == "windows" {
+			text = text[:len(text)-2]
+		} else {
+			text = text[:len(text)-1]
+		}
+		strnums := strings.Split(text, ",")
+		nums := make(map[int]bool)
+		for _, n := range strnums {
+			n = strings.TrimSpace(n)
+			num, e := strconv.Atoi(n)
+			if e != nil {
+				fmt.Println("Number provided is not an integer, ...")
+				err = e
+			} else if !validIndices[num] {
+				pp()
+				err = errors.New("Number is not within index")
+			} else {
+				nums[num] = true
+			}
+		}
+		if err == nil && len(nums) > 0 {
+			return nums, nil
+		}
+	}
 }
 
 func getSiteFile() string {
@@ -365,6 +403,17 @@ func writeYamlToSite(siteYaml ansible) {
 	moseutils.Msg("%s successfully created", files.siteFile)
 }
 
+func validateIndicies(data ansible) map[int]bool {
+	validIndex := make(map[int]bool, 0)
+	for i, hosts := range data {
+		if hosts.Include == "" {
+			moseutils.Msg("[%v] Name: %v, Hosts: %v, Roles: %v", i, hosts.Name, hosts.Hosts, hosts.Roles)
+			validIndex[i] = true
+		}
+	}
+	return validIndex
+}
+
 func backdoorSiteFile() {
 	var hosts []string
 	hostAllFound := false
@@ -430,15 +479,9 @@ func backdoorSiteFile() {
 		}
 	}
 	moseutils.Info("The following roles were found in the site.yml file: ")
-	validIndex := make(map[int]bool, 0)
-	for i, hosts := range unmarshalled {
-		if hosts.Include == "" {
-			moseutils.Msg("[%v] Name: %v, Hosts: %v, Roles: %v", i, hosts.Name, hosts.Hosts, hosts.Roles)
-			validIndex[i] = true
-		}
-	}
+	validIndex := validateIndicies(unmarshalled)
 
-	if ans, err := moseutils.IndexedUserQuestion("Provide the index of the location that you want to inject into the site.yml (ex. 1,3,...):", a.OsTarget, validIndex); err == nil {
+	if ans, err := indexedUserQuestion("Provide the index of the location that you want to inject into the site.yml (ex. 1,3,...):", a.OsTarget, validIndex, func() { validateIndicies(unmarshalled) }); err == nil {
 		for i := range unmarshalled {
 			// Check if the specified location is in the answer
 			if ans[i] {
