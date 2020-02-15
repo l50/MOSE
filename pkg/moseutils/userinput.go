@@ -95,11 +95,7 @@ func processInput() {
 		Cli.Rhost = JSONSettings.RemoteHost
 	}
 	if Cli.FileUpload != "" {
-		path, err := filepath.Abs(Cli.FileUpload)
-		if err != nil {
-			log.Printf("Error generating absolute path from FileUpload %s", Cli.FileUpload)
-		}
-		Cli.FileUpload = path
+		Cli.FileUpload, _ = filepath.Abs(Cli.FileUpload)
 	}
 	if Cli.Debug {
 		log.Print("JSON configuration loaded with the following values")

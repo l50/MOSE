@@ -27,6 +27,8 @@ var (
 )
 
 func generateParams() {
+	var origFileUpload string
+
 	paramLoc := filepath.Join("templates", UserInput.CMTarget)
 	box := packr.New("Params", "|")
 	box.ResolutionDir = paramLoc
@@ -49,13 +51,11 @@ func generateParams() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	var origFileUpload string
+	// Temporarily set UserInput.FileUpload to the name of the file uploaded to avoid pathing issues in the payload
 	if UserInput.FileUpload != "" {
 		origFileUpload = UserInput.FileUpload
 		UserInput.FileUpload = filepath.Base(UserInput.FileUpload)
 	}
-
 	err = t.Execute(f, UserInput)
 
 	f.Close()
@@ -88,13 +88,18 @@ func generateParams() {
 	if !UserInput.ServeSSL && UserInput.WebSrvPort == 443 {
 		UserInput.WebSrvPort = 8090
 	}
+
+	// Put it back
+	if UserInput.FileUpload != "" {
+		UserInput.FileUpload = origFileUpload
+	}
 }
 
 func generatePayload() {
 	if UserInput.Cmd != "" {
 		moseutils.Msg("Generating %s payload to run %s on a %s system, please wait...", UserInput.CMTarget, UserInput.Cmd, strings.ToLower(UserInput.OSTarget))
 	} else {
-		moseutils.Msg("Generating %s payload to run %s on a %s system, please wait...", UserInput.CMTarget, UserInput.FileUpload, strings.ToLower(UserInput.OSTarget))
+		moseutils.Msg("Generating %s payload to run %s on a %s system, please wait...", UserInput.CMTarget, filepath.Base(UserInput.FileUpload), strings.ToLower(UserInput.OSTarget))
 	}
 
 	prevDir := utils.Gwd()
@@ -110,10 +115,12 @@ func generatePayload() {
 		}
 	}
 
-	// FileUpload specified without tar file location
-	if UserInput.FileUpload != "" && UserInput.FilePath == "" {
-		log.Printf("File Upload specified, copying file to payloads directory.")
-		moseutils.CpFile(UserInput.FileUpload, filepath.Join("../../../payloads", filepath.Base(UserInput.FileUpload)))
+	// If FileUpload is specified, we need to copy it into place
+	if UserInput.FileUpload != "" {
+		err := moseutils.CpFile(UserInput.FileUpload, filepath.Join("../../../payloads", filepath.Base(UserInput.FileUpload)))
+		if err != nil {
+			log.Fatalf("Failed to copy input file upload (%v): %v, exiting", UserInput.FileUpload, err)
+		}
 	}
 
 	// FilePath specified with command to run
