@@ -368,7 +368,12 @@ func main() {
 			log.Fatal("Exiting...")
 		}
 
-		moseutils.Msg("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, cmd)
+		if uploadFileName != "" {
+			moseutils.Msg("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, uploadFileName)
+		} else {
+			moseutils.Msg("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, cmd)
+		}
+
 		backdoorManifest(manifestLoc)
 		modules := getModules(getPuppetCodeLoc(manifestLoc) + "/modules")
 		moseutils.Info("The following modules were found: %v", modules)

@@ -39,13 +39,17 @@ type ansibleFiles struct {
 }
 
 type ansible []struct {
-	Name        string        `json:"name,omitempty"`
-	Hosts       string        `json:"hosts,omitempty"`
-	Become      bool          `json:"become,omitempty"`
-	GatherFacts string        `json:"gather_facts,omitempty"`
-	Include     string        `json:"include,omitempty"`
-	Roles       []interface{} `json:"roles,flow,omitempty"`
-	Tasks       []interface{} `json:"tasks,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	Connection   interface{}            `json:"connection,omitempty"`
+	Vars         map[string]interface{} `json:"vars,omitempty,flow"`
+	Remote       string                 `json:"remote,omitempty"`
+	BecomeMethod string                 `json:"become_method,omitempty"`
+	Hosts        string                 `json:"hosts,omitempty"`
+	Become       bool                   `json:"become,omitempty"`
+	GatherFacts  string                 `json:"gather_facts,omitempty"`
+	Include      string                 `json:"include,omitempty"`
+	Roles        []interface{}          `json:"roles,flow,omitempty"`
+	Tasks        []interface{}          `json:"tasks,flow,omitempty"`
 }
 
 var (
@@ -441,6 +445,10 @@ func backdoorSiteFile() {
 		if ans, err := moseutils.AskUserQuestion("Would you like to target all managed nodes? ", a.OsTarget); ans && err == nil {
 			newItem := ansible{{
 				"Important Do Not Remove",
+				nil,
+				nil,
+				"",
+				"",
 				"all",
 				true,
 				"",
