@@ -41,8 +41,8 @@ func Cd(dir string) {
 	}
 }
 
-// GetUidGid gets the uid and gid of a file
-func GetUidGid(file string) (int, int, error) {
+// GetUIDGid gets the uid and gid of a file
+func GetUIDGid(file string) (int, int, error) {
 	info, err := os.Stat(file)
 	if err != nil {
 		return -1, -1, err
@@ -76,7 +76,7 @@ func FindFiles(locations []string, extensionList []string, fileNames []string, d
 	var foundFiles = make(map[string]int)
 	var foundDirs = make(map[string]int)
 	fileList, dirList := GetFileAndDirList(locations)
-	//  iterate through filenames if they are provided
+	// iterate through filenames if they are provided
 	for _, fileContains := range fileNames {
 		for _, file := range fileList {
 			if strings.Contains(file, fileContains) {

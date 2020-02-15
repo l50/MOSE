@@ -211,7 +211,7 @@ func main() {
 	}
 
 	// If the user hasn't specified to output the payload to a file, then serve it
-	if UserInput.FilePath == "" && UserInput.FileUpload != "" {
+	if UserInput.FilePath == "" {
 		servePayload(UserInput.WebSrvPort, UserInput.ServeSSL)
 	}
 

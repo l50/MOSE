@@ -580,7 +580,7 @@ func main() {
 		log.Printf("Site file: %v", files.siteFile)
 	}
 
-	uid, gid, err := moseutils.GetUidGid(files.siteFile)
+	uid, gid, err := moseutils.GetUIDGid(files.siteFile)
 	if err != nil {
 		moseutils.ErrMsg("Error retrieving uid and gid of file, will default to root")
 	}
