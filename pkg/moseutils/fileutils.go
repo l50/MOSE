@@ -226,7 +226,7 @@ func RemoveTracker(filePath string, osTarget string, destroy bool) {
 			continue
 		}
 		if !destroy {
-			ans, err = AskUserQuestion("Would you like to remove this file/folder "+filename, osTarget)
+			ans, err = AskUserQuestion("Would you like to remove this file: "+filename+"? ", osTarget)
 			if err != nil {
 				log.Fatal("Quitting cleanup...")
 			}

