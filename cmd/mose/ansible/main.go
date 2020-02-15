@@ -42,12 +42,13 @@ type ansible []struct {
 	Name         string                 `json:"name,omitempty"`
 	Connection   interface{}            `json:"connection,omitempty"`
 	Vars         map[string]interface{} `json:"vars,omitempty,flow"`
-	Remote       string                 `json:"remote,omitempty"`
+	Remote       string                 `json:"remote_user,omitempty"`
 	BecomeMethod string                 `json:"become_method,omitempty"`
 	Hosts        string                 `json:"hosts,omitempty"`
 	Become       bool                   `json:"become,omitempty"`
 	GatherFacts  string                 `json:"gather_facts,omitempty"`
 	Include      string                 `json:"include,omitempty"`
+	Tags         []interface{}          `json:"tags,omitempty,flow"`
 	Roles        []interface{}          `json:"roles,flow,omitempty"`
 	Tasks        []interface{}          `json:"tasks,flow,omitempty"`
 }
@@ -453,6 +454,7 @@ func backdoorSiteFile() {
 				true,
 				"",
 				"",
+				nil,
 				roles,
 				nil,
 			}}
