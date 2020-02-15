@@ -7,6 +7,7 @@ package moseutils
 import (
 	"flag"
 	"os"
+	"strings"
 )
 
 // CliArgs holds command line arguments specified through user input
@@ -85,7 +86,7 @@ func ParseCLIArgs() CliArgs {
 		FileUpload:           fileUpload,
 		LocalIP:              localIP,
 		PayloadName:          payloadName,
-		OSTarget:             osTarget,
+		OSTarget:             strings.ToLower(osTarget),
 		WebSrvPort:           webSrvPort,
 		RemoteUploadFilePath: remoteUploadFilePath,
 		SettingsPath:         settingsPath,

