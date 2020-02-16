@@ -81,7 +81,7 @@ steps:
 - script: |
     echo 'echo testing file upload > /tmp/file_upload_test.txt' > payloads/notevil.sh
     export GO111MODULE=on
-    ./mose -fu ${PWD}/payloads/notevil.sh -t puppet -f ${PWD}/payloads/puppet-linux
+    ./mose -fu payloads/notevil.sh -t puppet -f ${PWD}/payloads/puppet-linux
   displayName: 'Generate a puppet payload to test file upload'
   workingDirectory: "$(modulePath)"
 

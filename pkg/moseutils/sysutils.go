@@ -5,6 +5,7 @@
 package moseutils
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,21 +13,24 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 )
 
 // CpFile is used to copy a file from a source (src) to a destination (dst)
-func CpFile(src string, dst string) {
+// If there is a failure to do so, an error is returned
+func CpFile(src string, dst string) error {
 	input, err := ioutil.ReadFile(src)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Printf("Error reading from %s: %v", src, err)
+		return err
 	}
 
 	err = ioutil.WriteFile(dst, input, 0644)
 	if err != nil {
-		log.Printf("Error creating %v: %v", dst, err)
-		return
+		log.Printf("Error writing to %s: %v", dst, err)
+		return err
 	}
+	return nil
 }
 
 // Cd changes the directory to the one specified with dir
@@ -35,6 +39,31 @@ func Cd(dir string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// GetUIDGid gets the uid and gid of a file
+func GetUIDGid(file string) (int, int, error) {
+	info, err := os.Stat(file)
+	if err != nil {
+		return -1, -1, err
+	}
+	if stat, ok := info.Sys().(*syscall.Stat_t); ok {
+		UID := int(stat.Uid)
+		GID := int(stat.Gid)
+		return UID, GID, nil
+	}
+	return -1, -1, errors.New("Unable to retreive UID and GID of file")
+}
+
+// ChownR recursively change owner of directory
+func ChownR(path string, uid int, gid int) error {
+	return filepath.Walk(path, func(name string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		_ = os.Chown(name, uid, gid)
+		return nil
+	})
 }
 
 // FindFiles finds files based on their extension in specified directories
@@ -47,7 +76,7 @@ func FindFiles(locations []string, extensionList []string, fileNames []string, d
 	var foundFiles = make(map[string]int)
 	var foundDirs = make(map[string]int)
 	fileList, dirList := GetFileAndDirList(locations)
-	//  iterate through filenames if they are provided
+	// iterate through filenames if they are provided
 	for _, fileContains := range fileNames {
 		for _, file := range fileList {
 			if strings.Contains(file, fileContains) {

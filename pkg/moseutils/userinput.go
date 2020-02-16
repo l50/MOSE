@@ -80,12 +80,22 @@ func processInput() {
 	Cli = ParseCLIArgs()
 	JSONSettings = loadSettings(Cli.SettingsPath)
 
+	// Translate Relative path to absolute path from mose top level directory
+	if Cli.FilePath != "" {
+		path, err := filepath.Abs(Cli.FilePath)
+		if err != nil {
+			log.Printf("Error generating absolute payload FilePath from %s", Cli.FilePath)
+		}
+
+		Cli.FilePath = path
+	}
+
 	// If rhost isn't specified as an input parameter, set it to the value in settings.json
 	if Cli.Rhost == "" {
 		Cli.Rhost = JSONSettings.RemoteHost
 	}
 	if Cli.FileUpload != "" {
-		Cli.FileUpload = filepath.Base(Cli.FileUpload)
+		Cli.FileUpload, _ = filepath.Abs(Cli.FileUpload)
 	}
 	if Cli.Debug {
 		log.Print("JSON configuration loaded with the following values")
