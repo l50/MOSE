@@ -16,7 +16,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/CrimsonK1ng/mose/pkg/moseutils"
+	"github.com/master-of-servers/mose/pkg/moseutils"
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
 )
