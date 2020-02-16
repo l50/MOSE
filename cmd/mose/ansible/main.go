@@ -14,10 +14,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/CrimsonK1ng/mose/pkg/moseutils"
 	"github.com/ghodss/yaml"
 	"github.com/gobuffalo/packr/v2"
 	utils "github.com/l50/goutils"
+	"github.com/master-of-servers/mose/pkg/moseutils"
 )
 
 type command struct {
@@ -482,24 +482,11 @@ func backdoorSiteFile() {
 		log.Fatalf("Failure injecting into the site.yml file: %v, exiting.", err)
 	}
 	writeYamlToSite(unmarshalled)
-
-	// TODO: REMOVE THIS WHEN DONE
-	// find the hosts: all section
-	// if it doesn't exist, create it
-	// make sure to put the backdoor at the bottom of roles
-	// be sure to support cases like this: https://raw.githubusercontent.com/l50/ansible-docker-compose/master/ansible/site.yml
-	// where there are no roles
-	// if there are no roles, then add a roles section to the yaml file under the hosts: all section
-	// files to test with:
-	// https://raw.githubusercontent.com/l50/ansible-docker-compose/master/ansible/site.yml
-	// https://raw.githubusercontent.com/ansible/ansible-examples/master/mongodb/site.yml
-	// https://github.com/ansible/ansible-examples/blob/master/lamp_haproxy/site.yml
 }
 
 func findVaultSecrets() {
 	found, fileLoc := moseutils.FindFile("ansible-vault", []string{"/bin", "/usr/bin", "/usr/local/bin", "/etc/anisble"})
 	if found {
-		// TODO: test if ANSIBLE_VAULT_PASSWORD_FILE is empty - does it error out or everything works alright?
 		envPass := os.Getenv("ANSIBLE_VAULT_PASSWORD_FILE")
 		envFileExists, envFile := getVaultPassFromCfg()
 

@@ -1,4 +1,4 @@
-module github.com/CrimsonK1ng/mose
+module github.com/master-of-servers/mose
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
