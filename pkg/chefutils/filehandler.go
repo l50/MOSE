@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CrimsonK1ng/mose/pkg/moseutils"
+	"github.com/master-of-servers/mose/pkg/moseutils"
 )
 
 // checkInvalidChars detects invalid (and potentially malicious)
