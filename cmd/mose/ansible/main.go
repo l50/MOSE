@@ -82,7 +82,7 @@ func init() {
 
 func doCleanup(siteLoc string) {
 	moseutils.TrackChanges(cleanupFile, cleanupFile)
-	ans, err := moseutils.AskUserQuestion("Would you like to remove all files associated with a previous run?", osTarget)
+	ans, err := moseutils.AskUserQuestion("Would you like to remove all files associated with a previous run? ", osTarget)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -445,7 +445,7 @@ func backdoorSiteFile() {
 		roles = append(roles, ansibleRole)
 		if ans, err := moseutils.AskUserQuestion("Would you like to target all managed nodes? ", a.OsTarget); ans && err == nil {
 			newItem := ansible{{
-				"Important Do Not Remove",
+				a.PayloadName,
 				nil,
 				nil,
 				"",
