@@ -1,0 +1,21 @@
+package main
+
+import (
+	"github.com/l50/mose/pkg/agent"
+)
+
+func CreateAgent() agent.Agent {
+	agent := agent.Agent{
+		Cmd:      "{{.Cmd}}",
+		Debug:     {{.Debug}},
+		LocalIP:    "{{.LocalIP}}",
+		OsTarget:   "{{.OSTarget}}",
+		PayloadName:"{{.PayloadName}}",
+		FileName:   "{{.FileUpload}}",
+		SSL:        {{.ServeSSL}},
+		ExPort:     {{.ExfilPort}},
+		RemoteUploadFilePath: "{{.RemoteUploadFilePath}}",
+		CleanupFile: "{{.CleanupFile}}",
+	}
+	return agent
+}

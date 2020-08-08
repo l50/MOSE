@@ -7,11 +7,12 @@ package chefutils
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
-	"github.com/master-of-servers/mose/pkg/moseutils"
+	"github.com/l50/mose/pkg/moseutils"
+
+	"github.com/rs/zerolog/log"
 )
 
 // TargetAgents allows a user to select specific chef agents, or return them all as a []string
@@ -20,12 +21,12 @@ func TargetAgents(nodes []string, osTarget string) ([]string, error) {
 	if ans, err := moseutils.AskUserQuestion("Do you want to target specific chef agents? ", osTarget); ans && err == nil {
 		reader := bufio.NewReader(os.Stdin)
 		// Print the first discovered node (done for formatting purposes)
-		fmt.Printf("%s", nodes[0])
+		log.Log().Msgf("%s", nodes[0])
 		// Print the rest of the discovered nodes
 		for _, node := range nodes[1:] {
-			fmt.Printf(",%s", node)
+			log.Log().Msgf(",%s", node)
 		}
-		fmt.Println("\nPlease input the chef agents that you want to target using commas to separate them: ")
+		log.Log().Msgf("\nPlease input the chef agents that you want to target using commas to separate them: ")
 		text, _ := reader.ReadString('\n')
 		targets = strings.Split(strings.TrimSuffix(text, "\n"), ",")
 	} else if !ans && err == nil {

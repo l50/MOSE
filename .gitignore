@@ -27,3 +27,8 @@ packrd/
 main-packr.go
 pkg/chefutils/chefutils-packr.go
 params.go
+pkged.go
+
+# debugging and dev
+debug.sh
+get_upstream.sh

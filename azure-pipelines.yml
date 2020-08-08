@@ -20,9 +20,9 @@ variables:
 
 steps:
 - script: |
-    wget "https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.13.4.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.13.4.tar.gz"
-  displayName: 'Install Go 1.13.4'
+    wget "https://golang.org/dl/go1.14.6.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.6.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.6.tar.gz"
+  displayName: 'Install Go 1.14.6'
 
 - script: |
     mkdir -p '$(GOBIN)'
@@ -37,9 +37,8 @@ steps:
   displayName: 'Set up the Go workspace'
 
 - script: |
-    go get -u github.com/gobuffalo/packr/v2/packr2
+    go get github.com/markbates/pkger/cmd/pkger
     export GO111MODULE=on
-    packr2 build
     go get
     go build
     mkdir -p payloads
@@ -49,7 +48,7 @@ steps:
 # Puppet
 - script: |
     export GO111MODULE=on
-    ./mose -c "touch /tmp/test.txt && echo test >> /tmp/test.txt" -t puppet -f $(modulePath)/payloads/puppet-linux
+    ./mose puppet -c "touch /tmp/test.txt && echo test >> /tmp/test.txt"  -f $(modulePath)/payloads/puppet-linux
   displayName: 'Generate a puppet payload'
   workingDirectory: "$(modulePath)"
 
@@ -57,9 +56,9 @@ steps:
     git clone https://github.com/master-of-servers/puppet-test-lab.git
     cd puppet-test-lab && cd basic
     docker-compose up -d --build
-    sleep 40
+    sleep 60
     # Enroll agent with puppet master
-    docker exec -i basic-puppetagent /bin/bash -c "puppet agent -t --waitforcert=120"
+    docker exec -i basic-puppetagent /bin/bash -c "puppet agent -t --waitforcert=240"
     docker ps
   displayName: 'Build and configure the puppet test environment'
   workingDirectory: "$(modulePath)"
@@ -81,7 +80,7 @@ steps:
 - script: |
     echo 'echo testing file upload > /tmp/file_upload_test.txt' > payloads/notevil.sh
     export GO111MODULE=on
-    ./mose -fu payloads/notevil.sh -t puppet -f payloads/puppet-linux
+    ./mose puppet -u payloads/notevil.sh  -f payloads/puppet-linux
   displayName: 'Generate a puppet payload to test file upload'
   workingDirectory: "$(modulePath)"
 
@@ -171,7 +170,7 @@ steps:
 # Ansible
 - script: |
     export GO111MODULE=on
-    ./mose -c "touch /tmp/test.txt && echo test >> /tmp/test.txt" -t ansible -f $(modulePath)/payloads/ansible-linux
+    ./mose ansible -c "touch /tmp/test.txt && echo test >> /tmp/test.txt" -f $(modulePath)/payloads/ansible-linux
   displayName: 'Generate an ansible payload'
   workingDirectory: "$(modulePath)"
 
@@ -219,7 +218,7 @@ steps:
 - script: |
     echo 'echo testing file upload > /tmp/file_upload_test.txt' > payloads/notevil.sh
     export GO111MODULE=on
-    ./mose -fu payloads/notevil.sh -t ansible -f payloads/ansible-linux
+    ./mose ansible -u payloads/notevil.sh -f payloads/ansible-linux
   displayName: 'Generate an ansible payload to test file upload'
   workingDirectory: "$(modulePath)"
 

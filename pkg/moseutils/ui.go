@@ -7,10 +7,11 @@ package moseutils
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 // AskUserQuestion takes a question from a user and returns true or false based on the input.
@@ -20,7 +21,7 @@ import (
 func AskUserQuestion(question string, osTarget string) (bool, error) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Println(question + "[Y/n/q]")
+		log.Log().Msgf(question + "[Y/n/q]")
 		text, _ := reader.ReadString('\n')
 		if strings.Contains(text, "Y") {
 			if osTarget == "windows" {
@@ -34,7 +35,7 @@ func AskUserQuestion(question string, osTarget string) (bool, error) {
 		} else if strings.Contains(text, "n") {
 			return false, nil
 		} else {
-			ErrMsg("Invalid input")
+			log.Error().Msg("Invalid input")
 		}
 	}
 }
@@ -43,13 +44,13 @@ func AskUserQuestion(question string, osTarget string) (bool, error) {
 // The input must be a number, which correspond to an index of an answer.
 // The operating system must be specified as an input in order to handle the line ending properly;
 // Windows uses a different line ending scheme than Unix systems
-// pp is used to pass in an anonymous function for pretty printing - see validateIndicies() in cmd/mose/ansible/main.go for an example
+// pp is used to pass in an anonymous function for pretty printing - see validateIndicies() in cmd/github.com/l50/mose/ansible/main.go for an example
 // Loosely based on https://tutorialedge.net/golang/reading-console-input-golang/
 func IndexedUserQuestion(question string, osTarget string, validIndices map[int]bool, pp func()) (map[int]bool, error) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		var err error
-		fmt.Println(question)
+		log.Log().Msg(question)
 		text, _ := reader.ReadString('\n')
 		if strings.Contains(text, "q") {
 			return nil, errors.New("Quit")
@@ -65,10 +66,10 @@ func IndexedUserQuestion(question string, osTarget string, validIndices map[int]
 			n = strings.TrimSpace(n)
 			num, e := strconv.Atoi(n)
 			if e != nil {
-				ErrMsg("Number provided is not an integer")
+				log.Error().Msg("Number provided is not an integer")
 				err = e
 			} else if !validIndices[num] {
-				ErrMsg("Number is not valid, try again")
+				log.Error().Msg("Number is not valid, try again")
 				if pp != nil {
 					pp()
 				}
