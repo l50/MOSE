@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/docker/docker v1.13.1
-	github.com/markbates/pkger v0.17.0
+	github.com/markbates/pkger v0.17.1
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/rs/zerolog v1.25.0
 	github.com/spf13/cobra v1.5.0
