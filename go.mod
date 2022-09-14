@@ -7,7 +7,7 @@ require (
 	github.com/markbates/pkger v0.17.0
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/rs/zerolog v1.25.0
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.7.0
 )
 
