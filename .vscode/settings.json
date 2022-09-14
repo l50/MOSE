@@ -1,0 +1,7 @@
+{
+  "go.gopath": "${env:GOPATH}",
+  "go.toolsEnvVars": {
+    "GO111MODULE": "on",
+    "GOARCH": "arm64"
+  }
+}

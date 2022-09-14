@@ -14,21 +14,22 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/master-of-servers/mose/pkg/moseutils"
 	"github.com/mholt/archiver"
 	"github.com/rs/zerolog/log"
 )
 
-// CreateFolders creates folders specified in an input slice (folders)
+// CreateDirectories creates folders specified in an input slice (folders)
 // It returns true if it is able to create all of the folders
 // Otherwise it returns false
-func CreateFolders(folders []string) bool {
+func CreateDirectories(folders []string) bool {
 	for _, f := range folders {
 		err := os.MkdirAll(f, os.ModePerm)
 		if err != nil {
 			log.Error().Err(err).Msg("")
 			return false
 		}
-		log.Log().Msgf("Creating folder %s\n", f)
+		moseutils.ColorMsgf("Creating %s directory", f)
 	}
 	return true
 }
@@ -156,7 +157,7 @@ func ArchiveFiles(files []string, archiveLocation string) (string, error) {
 
 	arc, ok := ext.(archiver.Archiver)
 	if !ok {
-		return "", errors.New("Archive type not supported currently currently supported: (tar.gz, tar, tar.xz, zip)")
+		return "", errors.New("the following archive types are not supported: tar.gz, tar, tar.xz, zip")
 	}
 	if err := arc.Archive(files, archiveLocation); err != nil {
 		return "", err

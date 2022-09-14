@@ -9,7 +9,6 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	"github.com/l50/mose/pkg/userinput"
 	"os"
 	"os/signal"
 	"path"
@@ -18,6 +17,9 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/master-of-servers/mose/pkg/moseutils"
+	"github.com/master-of-servers/mose/pkg/userinput"
 
 	"github.com/rs/zerolog/log"
 
@@ -84,9 +86,7 @@ func simpleRun(cli *client.Client, id string, cmd []string) types.IDResponse {
 		log.Fatal().Err(err).Msg("")
 	}
 
-	if userInput.Debug {
-		log.Printf("Ran %v in the container.", cmd)
-	}
+	log.Debug().Msgf("Ran %v in the container.", cmd)
 
 	return execID
 }
@@ -123,10 +123,8 @@ func build(cli *client.Client) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
-	if userInput.Debug {
-		log.Debug().Msgf("********* %s **********", ibr.OSType)
-		log.Debug().Msg(string(response))
-	}
+	log.Debug().Msgf("********* %s **********", ibr.OSType)
+	log.Debug().Msg(string(response))
 }
 
 func run(cli *client.Client) string {
@@ -156,9 +154,7 @@ func run(cli *client.Client) string {
 		panic(err)
 	}
 
-	if userInput.Debug {
-		log.Printf("Running container with id %v", resp.ID)
-	}
+	log.Debug().Msgf("Running container with id %v", resp.ID)
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		log.Fatal().Err(err).Msg("")
@@ -212,9 +208,7 @@ func runMoseInContainer(cli *client.Client, id string, osTarget string) {
 		log.Fatal().Err(err).Msg("")
 	}
 
-	if userInput.Debug {
-		log.Printf("Running container exec and attach for container ID %v", execID.ID)
-	}
+	log.Debug().Msgf("Running container exec and attach for container ID %v", execID.ID)
 	hj, err := cli.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{Detach: false, Tty: true})
 
 	if err != nil {
@@ -237,7 +231,7 @@ func runMoseInContainer(cli *client.Client, id string, osTarget string) {
 		for groupID, group := range match {
 			name := names[groupID]
 			if name != "" {
-				log.Log().Msgf("The following nodes were identified: %v", group)
+				moseutils.ColorMsgf("The following nodes were identified: %v", group)
 				nodes = append(nodes, strings.Split(group, " ")...)
 			}
 		}
@@ -259,9 +253,7 @@ func runMoseInContainer(cli *client.Client, id string, osTarget string) {
 		os.Exit(1)
 	}
 
-	if userInput.Debug {
-		log.Printf("Command to be run in the container: %v", append([]string{binPath, "-n"}, agents...))
-	}
+	log.Debug().Msgf("Command to be run in the container: %v", append([]string{binPath, "-n"}, agents...))
 
 	execID, err = cli.ContainerExecCreate(ctx,
 		id,
@@ -279,9 +271,8 @@ func runMoseInContainer(cli *client.Client, id string, osTarget string) {
 		log.Fatal().Err(err).Msg("")
 	}
 
-	if userInput.Debug {
-		log.Printf("Running container exec and attach for container ID %v", execID.ID)
-	}
+	log.Debug().Msgf("Running container exec and attach for container ID %v", execID.ID)
+
 	hj, err = cli.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{Detach: false, Tty: true})
 
 	if err != nil {
@@ -332,7 +323,7 @@ func generateKnife() {
 		TargetValidatorName: userInput.TargetValidatorName,
 	}
 
-	s, err := pkger.Open("cmd/github.com/l50/mose/chef/tmpl/knife.tmpl")
+	s, err := pkger.Open("/cmd/chef/main/tmpl/knife.tmpl")
 	// Build knife.rb using the knife template
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
@@ -341,6 +332,11 @@ func generateKnife() {
 
 	dat := new(strings.Builder)
 	_, err = io.Copy(dat, s)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+	defer s.Close()
 
 	t, err := template.New("knife").Parse(dat.String())
 
@@ -367,10 +363,9 @@ func generateKnife() {
 func SetupChefWorkstationContainer(input userinput.UserInput) {
 	userInput = input
 	signalChan = make(chan os.Signal, 1)
-	if userInput.Debug {
-		log.Printf("Creating exfil endpoint at %v:%v", userInput.LocalIP, userInput.ExfilPort)
-		log.Printf("Current orgname: %s", userInput.TargetOrgName)
-	}
+
+	log.Debug().Msgf("Creating exfil endpoint at %v:%v", userInput.LocalIP, userInput.ExfilPort)
+	log.Debug().Msgf("Current orgname: %s", userInput.TargetOrgName)
 
 	CreateUploadRoute(userInput)
 	log.Info().Msgf("Target organization name: %s", userInput.TargetOrgName)

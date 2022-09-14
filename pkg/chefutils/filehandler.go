@@ -8,13 +8,15 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"github.com/l50/mose/pkg/netutils"
-	"github.com/l50/mose/pkg/system"
-	"github.com/l50/mose/pkg/userinput"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/master-of-servers/mose/pkg/moseutils"
+	"github.com/master-of-servers/mose/pkg/netutils"
+	"github.com/master-of-servers/mose/pkg/system"
+	"github.com/master-of-servers/mose/pkg/userinput"
 
 	"github.com/rs/zerolog/log"
 )
@@ -127,7 +129,7 @@ func CreateUploadRoute(userInput userinput.UserInput) {
 		ip = userInput.LocalIP
 	}
 	if _, err := os.Stat("keys"); os.IsNotExist(err) {
-		system.CreateFolders([]string{"keys"})
+		system.CreateDirectories([]string{"keys"})
 	}
 
 	http.HandleFunc("/upload", fileUploader)
@@ -136,7 +138,7 @@ func CreateUploadRoute(userInput userinput.UserInput) {
 	if userInput.ServeSSL {
 		proto = "https"
 	}
-	log.Log().Msgf("Listener being served at %s://%s:%d/%s-%s for %d seconds\n", proto, ip, userInput.ExfilPort, userInput.CMTarget, userInput.OSTarget, userInput.TimeToServe)
+	moseutils.ColorMsgf("Listener being served at %s://%s:%d/%s-%s for %d seconds", proto, ip, userInput.ExfilPort, userInput.CMTarget, userInput.OSTarget, userInput.TimeToServe)
 	srv := netutils.StartServer(userInput.ExfilPort, "", userInput.ServeSSL, userInput.SSLCertPath, userInput.SSLKeyPath, time.Duration(userInput.TimeToServe)*time.Second, false)
 
 	log.Info().Msg("Web server shutting down...")

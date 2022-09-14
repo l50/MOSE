@@ -1,3 +1,7 @@
+// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+// Under the terms of Contract DE-NA0003525 with NTESS,
+// the U.S. Government retains certain rights in this software.
+
 package moseutils
 
 import (
@@ -35,7 +39,7 @@ func RemoveTracker(filePath string, osTarget string, destroy bool) {
 		if ans || destroy {
 			err = os.RemoveAll(filename)
 			if err != nil {
-				log.Log().Msgf("Error removing file %s", filename)
+				ColorMsgf("Error removing file %s", filename)
 			}
 			deleted[filename] = true
 		}
