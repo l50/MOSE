@@ -6,7 +6,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/markbates/pkger v0.17.0
 	github.com/mholt/archiver v3.1.1+incompatible
-	github.com/rs/zerolog v1.25.0
+	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
 )
@@ -28,6 +28,8 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
