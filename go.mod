@@ -6,7 +6,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/markbates/pkger v0.17.0
 	github.com/mholt/archiver v3.1.1+incompatible
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
 )
